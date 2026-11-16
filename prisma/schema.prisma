@@ -1,0 +1,276 @@
+// Modelo de datos del sistema hospitalario.
+// Ver docs/DISENO.md para la descripción de cada módulo.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Usuarios y personal ─────────────────────────────────────────────
+
+enum Rol {
+  ADMIN
+  MEDICO
+  RECEPCION
+  FARMACIA
+}
+
+model Usuario {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  nombre       String
+  claveHash    String
+  rol          Rol       @default(RECEPCION)
+  activo       Boolean   @default(true)
+  personalId   String?   @unique
+  personal     Personal? @relation(fields: [personalId], references: [id])
+  creadoEn     DateTime  @default(now())
+  actualizadoEn DateTime @updatedAt
+}
+
+enum TipoPersonal {
+  MEDICO
+  ENFERMERIA
+  ADMINISTRATIVO
+  FARMACIA
+  LABORATORIO
+  OTRO
+}
+
+/// Plantilla de personal del centro de salud.
+model Personal {
+  id            String       @id @default(cuid())
+  cedula        String       @unique
+  nombres       String
+  apellidos     String
+  tipo          TipoPersonal
+  cargo         String
+  telefono      String?
+  email         String?
+  fechaIngreso  DateTime?
+  activo        Boolean      @default(true)
+  medico        Medico?
+  usuario       Usuario?
+  creadoEn      DateTime     @default(now())
+  actualizadoEn DateTime     @updatedAt
+}
+
+/// Datos profesionales de un miembro del personal que es médico.
+model Medico {
+  id               String         @id @default(cuid())
+  personalId       String         @unique
+  personal         Personal       @relation(fields: [personalId], references: [id], onDelete: Cascade)
+  numeroMpps       String         @unique
+  numeroColegio    String?
+  firmaUrl         String?
+  selloUrl         String?
+  especialidades   Especialidad[]
+  horarios         Horario[]
+  citas            Cita[]
+  consultas        Consulta[]
+  recetas          Receta[]
+  creadoEn         DateTime       @default(now())
+  actualizadoEn    DateTime       @updatedAt
+}
+
+// ─── Especialidades y consultorios ───────────────────────────────────
+
+model Especialidad {
+  id           String        @id @default(cuid())
+  nombre       String        @unique
+  descripcion  String?
+  medicos      Medico[]
+  consultorios Consultorio[]
+  enfermedades Enfermedad[]
+}
+
+model Consultorio {
+  id             String        @id @default(cuid())
+  nombre         String        @unique
+  piso           String?
+  ubicacion      String?
+  activo         Boolean       @default(true)
+  especialidadId String?
+  especialidad   Especialidad? @relation(fields: [especialidadId], references: [id])
+  horarios       Horario[]
+  citas          Cita[]
+}
+
+enum DiaSemana {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+  SABADO
+  DOMINGO
+}
+
+/// Turno semanal de un médico en un consultorio. Horas en formato "HH:MM".
+model Horario {
+  id            String      @id @default(cuid())
+  medicoId      String
+  medico        Medico      @relation(fields: [medicoId], references: [id], onDelete: Cascade)
+  consultorioId String
+  consultorio   Consultorio @relation(fields: [consultorioId], references: [id], onDelete: Cascade)
+  dia           DiaSemana
+  horaInicio    String
+  horaFin       String
+
+  @@unique([consultorioId, dia, horaInicio])
+}
+
+// ─── Pacientes, citas y consultas ────────────────────────────────────
+
+enum Sexo {
+  FEMENINO
+  MASCULINO
+}
+
+model Paciente {
+  id              String     @id @default(cuid())
+  cedula          String?    @unique
+  nombres         String
+  apellidos       String
+  fechaNacimiento DateTime
+  sexo            Sexo
+  telefono        String?
+  email           String?
+  direccion       String?
+  tipoSangre      String?
+  alergias        String?
+  antecedentes    String?
+  citas           Cita[]
+  consultas       Consulta[]
+  recetas         Receta[]
+  creadoEn        DateTime   @default(now())
+  actualizadoEn   DateTime   @updatedAt
+}
+
+enum EstadoCita {
+  PENDIENTE
+  CONFIRMADA
+  ATENDIDA
+  CANCELADA
+  NO_ASISTIO
+}
+
+model Cita {
+  id            String       @id @default(cuid())
+  pacienteId    String
+  paciente      Paciente     @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  medicoId      String
+  medico        Medico       @relation(fields: [medicoId], references: [id])
+  consultorioId String?
+  consultorio   Consultorio? @relation(fields: [consultorioId], references: [id])
+  fechaHora     DateTime
+  motivo        String?
+  estado        EstadoCita   @default(PENDIENTE)
+  consulta      Consulta?
+  creadoEn      DateTime     @default(now())
+}
+
+/// Registro de la historia clínica.
+model Consulta {
+  id            String      @id @default(cuid())
+  pacienteId    String
+  paciente      Paciente    @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  medicoId      String
+  medico        Medico      @relation(fields: [medicoId], references: [id])
+  citaId        String?     @unique
+  cita          Cita?       @relation(fields: [citaId], references: [id])
+  fecha         DateTime    @default(now())
+  motivo        String
+  examenFisico  String?
+  diagnostico   String?
+  enfermedadId  String?
+  enfermedad    Enfermedad? @relation(fields: [enfermedadId], references: [id])
+  plan          String?
+  recetas       Receta[]
+}
+
+// ─── Récipes ─────────────────────────────────────────────────────────
+
+model Receta {
+  id                    String       @id @default(cuid())
+  numero                Int          @unique @default(autoincrement())
+  pacienteId            String
+  paciente              Paciente     @relation(fields: [pacienteId], references: [id])
+  medicoId              String
+  medico                Medico       @relation(fields: [medicoId], references: [id])
+  consultaId            String?
+  consulta              Consulta?    @relation(fields: [consultaId], references: [id])
+  fecha                 DateTime     @default(now())
+  indicacionesGenerales String?
+  items                 RecetaItem[]
+}
+
+model RecetaItem {
+  id            String       @id @default(cuid())
+  recetaId      String
+  receta        Receta       @relation(fields: [recetaId], references: [id], onDelete: Cascade)
+  medicamentoId String?
+  medicamento   Medicamento? @relation(fields: [medicamentoId], references: [id])
+  /// Texto libre cuando el medicamento no está en el catálogo.
+  descripcion   String?
+  cantidad      String
+  dosis         String
+  frecuencia    String
+  duracion      String
+  indicaciones  String?
+}
+
+// ─── Enfermedades y vademécum ────────────────────────────────────────
+
+/// Catálogo de enfermedades según la clasificación CIE-10.
+model Enfermedad {
+  id             String        @id @default(cuid())
+  codigoCie10    String        @unique
+  nombre         String
+  especialidadId String?
+  especialidad   Especialidad? @relation(fields: [especialidadId], references: [id])
+  medicamentos   Medicamento[]
+  consultas      Consulta[]
+}
+
+enum ViaAdministracion {
+  ORAL
+  SUBLINGUAL
+  TOPICA
+  INTRAVENOSA
+  INTRAMUSCULAR
+  SUBCUTANEA
+  INHALATORIA
+  OFTALMICA
+  OTICA
+  NASAL
+  RECTAL
+  VAGINAL
+  OTRA
+}
+
+model Medicamento {
+  id                     String            @id @default(cuid())
+  principioActivo        String
+  nombreComercial        String?
+  presentacion           String
+  concentracion          String?
+  via                    ViaAdministracion @default(ORAL)
+  laboratorio            String?
+  /// Psicotrópicos y estupefacientes que exigen récipe especial.
+  requiereRecipeEspecial Boolean           @default(false)
+  /// Origen del registro: "local" o el nombre de la API externa.
+  fuente                 String            @default("local")
+  codigoExterno          String?
+  enfermedades           Enfermedad[]
+  recetaItems            RecetaItem[]
+  creadoEn               DateTime          @default(now())
+  actualizadoEn          DateTime          @updatedAt
+
+  @@unique([fuente, codigoExterno])
+  @@index([principioActivo])
+}
