@@ -1,5 +1,7 @@
 import { z } from "zod";
-import type { ConfigRecurso } from "./api";
+import { ErrorNegocio, type ConfigRecurso } from "./api";
+import { prisma } from "./prisma";
+import { COMPONENTES, gradosDeComponente } from "./marca/grados";
 
 // Esquemas de validación y configuración de cada recurso de la API.
 // Para agregar un recurso nuevo: defina su esquema aquí y cree sus dos archivos route.ts.
@@ -18,6 +20,32 @@ function relacion(datos: Datos, campoIds: string, campoRelacion: string, modo: "
   return { ...resto, [campoRelacion]: { [modo]: lista.map((id) => ({ id })) } };
 }
 
+// Afiliación militar (opcional): componente de la FANB y grado del catálogo del kit de marca.
+const militar = {
+  componente: z.enum(COMPONENTES.map((c) => c.codigo) as [string, ...string[]]).optional().nullable(),
+  grado: textoOpcional,
+};
+
+/** El grado debe existir en el componente elegido (la Armada usa su denominación naval). */
+function validarGrado(d: { componente?: string | null; grado?: string | null }, ctx: z.RefinementCtx) {
+  if (!d.grado) return;
+  if (!d.componente) {
+    ctx.addIssue({ code: "custom", path: ["grado"], message: "Indique primero el componente" });
+  } else if (!gradosDeComponente(d.componente).some((g) => g.clave === d.grado)) {
+    ctx.addIssue({ code: "custom", path: ["grado"], message: "Ese grado no existe en el componente elegido" });
+  }
+}
+
+/** Igual que validarGrado, para los datos personales que viajan dentro del médico. */
+function validarGradoAnidado(p: { componente?: string | null; grado?: string | null }, ctx: z.RefinementCtx) {
+  if (p.grado && p.componente && !gradosDeComponente(p.componente).some((g) => g.clave === p.grado)) {
+    ctx.addIssue({ code: "custom", path: ["personal", "grado"], message: "Ese grado no existe en el componente elegido" });
+  }
+  if (p.grado && p.componente === null) {
+    ctx.addIssue({ code: "custom", path: ["personal", "grado"], message: "Indique primero el componente" });
+  }
+}
+
 // ─── Personal ────────────────────────────────────────────────────────
 
 const personal = z.object({
@@ -30,12 +58,13 @@ const personal = z.object({
   email: z.string().email().optional().nullable(),
   fechaIngreso: z.coerce.date().optional().nullable(),
   activo: z.boolean().optional(),
+  ...militar,
 });
 
 export const recursoPersonal: ConfigRecurso = {
   modelo: "personal",
-  crear: personal,
-  actualizar: personal.partial(),
+  crear: personal.superRefine(validarGrado),
+  actualizar: personal.partial().superRefine(validarGrado),
   camposBusqueda: ["cedula", "nombres", "apellidos", "cargo"],
   include: { medico: true },
   orderBy: [{ apellidos: "asc" }, { nombres: "asc" }],
@@ -43,10 +72,16 @@ export const recursoPersonal: ConfigRecurso = {
 
 // ─── Médicos ─────────────────────────────────────────────────────────
 
+// Un médico se puede crear a partir de un miembro del personal existente (personalId)
+// o en un solo paso enviando sus datos personales (personal), que se guardan como personal tipo MEDICO.
+const datosPersonalesMedico = personal.omit({ tipo: true, cargo: true }).extend({ cargo: textoOpcional });
+
 const medico = z.object({
-  personalId: texto,
+  personalId: textoOpcional,
+  personal: datosPersonalesMedico.optional(),
   numeroMpps: texto,
   numeroColegio: textoOpcional,
+  logoUrl: textoOpcional,
   firmaUrl: textoOpcional,
   selloUrl: textoOpcional,
   especialidadIds: ids,
@@ -54,13 +89,33 @@ const medico = z.object({
 
 export const recursoMedicos: ConfigRecurso = {
   modelo: "medico",
-  crear: medico,
-  actualizar: medico.omit({ personalId: true }).partial(),
+  crear: medico
+    .refine((d) => d.personalId || d.personal, {
+      message: "Indique personalId o los datos personales del médico",
+      path: ["personalId"],
+    })
+    .superRefine((d, ctx) => d.personal && validarGradoAnidado(d.personal, ctx)),
+  actualizar: medico
+    .omit({ personalId: true, personal: true })
+    .extend({ personal: datosPersonalesMedico.partial().optional() })
+    .partial()
+    .superRefine((d, ctx) => d.personal && validarGradoAnidado(d.personal, ctx)),
   camposBusqueda: ["numeroMpps", "numeroColegio"],
   include: { personal: true, especialidades: true },
   orderBy: { creadoEn: "desc" },
-  aCrear: (d) => relacion(d, "especialidadIds", "especialidades", "connect"),
-  aActualizar: (d) => relacion(d, "especialidadIds", "especialidades", "set"),
+  aCrear: (d) => {
+    const { personal: datosPersonales, personalId, ...resto } = relacion(d, "especialidadIds", "especialidades", "connect");
+    if (!datosPersonales) return { ...resto, personalId };
+    const p = datosPersonales as Datos;
+    return { ...resto, personal: { create: { ...p, cargo: p.cargo ?? "Médico", tipo: "MEDICO" } } };
+  },
+  aActualizar: (d) => {
+    const { personal: datosPersonales, ...resto } = relacion(d, "especialidadIds", "especialidades", "set");
+    if (!datosPersonales) return resto;
+    // El cargo es obligatorio en la base: si llega vacío se conserva el que tenía.
+    const { cargo, ...p } = datosPersonales as Datos;
+    return { ...resto, personal: { update: cargo ? { ...p, cargo } : p } };
+  },
 };
 
 // ─── Especialidades y consultorios ───────────────────────────────────
@@ -122,12 +177,13 @@ const paciente = z.object({
   tipoSangre: textoOpcional,
   alergias: textoOpcional,
   antecedentes: textoOpcional,
+  ...militar,
 });
 
 export const recursoPacientes: ConfigRecurso = {
   modelo: "paciente",
-  crear: paciente,
-  actualizar: paciente.partial(),
+  crear: paciente.superRefine(validarGrado),
+  actualizar: paciente.partial().superRefine(validarGrado),
   camposBusqueda: ["cedula", "nombres", "apellidos"],
   orderBy: [{ apellidos: "asc" }, { nombres: "asc" }],
 };
@@ -141,10 +197,43 @@ const cita = z.object({
   estado: z.enum(["PENDIENTE", "CONFIRMADA", "ATENDIDA", "CANCELADA", "NO_ASISTIO"]).optional(),
 });
 
+const MARGEN_CITA_MS = 15 * 60 * 1000;
+const ACTIVAS = ["PENDIENTE", "CONFIRMADA"] as const;
+
+/** Evita agendar dos citas activas del mismo médico, o del mismo paciente, a menos de 15 minutos. */
+async function validarCita(d: Datos, id?: string) {
+  const actual = id ? await prisma.cita.findUnique({ where: { id } }) : null;
+  const estado = (d.estado as string | undefined) ?? actual?.estado ?? "PENDIENTE";
+  if (!ACTIVAS.includes(estado as (typeof ACTIVAS)[number])) return; // Cancelar o marcar asistencia nunca choca.
+  const fechaHora = (d.fechaHora as Date | undefined) ?? actual?.fechaHora;
+  const medicoId = (d.medicoId as string | undefined) ?? actual?.medicoId;
+  const pacienteId = (d.pacienteId as string | undefined) ?? actual?.pacienteId;
+  if (!fechaHora || !medicoId) return;
+
+  const rango = { gt: new Date(fechaHora.getTime() - MARGEN_CITA_MS), lt: new Date(fechaHora.getTime() + MARGEN_CITA_MS) };
+  const choque = await prisma.cita.findFirst({
+    where: {
+      id: id ? { not: id } : undefined,
+      estado: { in: [...ACTIVAS] },
+      fechaHora: rango,
+      OR: [{ medicoId }, ...(pacienteId ? [{ pacienteId }] : [])],
+    },
+    include: { paciente: true, medico: { include: { personal: true } } },
+  });
+  if (!choque) return;
+  const hora = choque.fechaHora.toLocaleTimeString("es-VE", { timeZone: "America/Caracas", hour: "2-digit", minute: "2-digit" });
+  throw new ErrorNegocio(
+    choque.medicoId === medicoId
+      ? `${choque.medico.personal.nombres} ${choque.medico.personal.apellidos} ya tiene una cita a las ${hora} con ${choque.paciente.nombres} ${choque.paciente.apellidos}. Elija otra hora (al menos 15 minutos de diferencia).`
+      : `${choque.paciente.nombres} ${choque.paciente.apellidos} ya tiene otra cita a las ${hora}. Elija otra hora.`,
+  );
+}
+
 export const recursoCitas: ConfigRecurso = {
   modelo: "cita",
   crear: cita,
   actualizar: cita.partial(),
+  validar: validarCita,
   camposBusqueda: ["motivo"],
   include: { paciente: true, medico: { include: { personal: true } }, consultorio: true },
   orderBy: { fechaHora: "asc" },
@@ -160,6 +249,14 @@ const consulta = z.object({
   diagnostico: textoOpcional,
   enfermedadId: textoOpcional,
   plan: textoOpcional,
+  tensionSistolica: z.number().int().min(50, "Revise la tensión sistólica").max(260, "Revise la tensión sistólica").optional().nullable(),
+  tensionDiastolica: z.number().int().min(30, "Revise la tensión diastólica").max(160, "Revise la tensión diastólica").optional().nullable(),
+  frecuenciaCardiaca: z.number().int().min(20, "Revise la frecuencia cardíaca").max(250, "Revise la frecuencia cardíaca").optional().nullable(),
+  frecuenciaRespiratoria: z.number().int().min(5, "Revise la frecuencia respiratoria").max(80, "Revise la frecuencia respiratoria").optional().nullable(),
+  temperatura: z.number().min(30, "Revise la temperatura").max(45, "Revise la temperatura").optional().nullable(),
+  saturacion: z.number().int().min(50, "Revise la saturación").max(100, "Revise la saturación").optional().nullable(),
+  pesoKg: z.number().min(0.5, "Revise el peso").max(350, "Revise el peso").optional().nullable(),
+  tallaCm: z.number().min(30, "Revise la talla").max(250, "Revise la talla").optional().nullable(),
 });
 
 export const recursoConsultas: ConfigRecurso = {
@@ -177,7 +274,7 @@ const recetaItem = z
   .object({
     medicamentoId: textoOpcional,
     descripcion: textoOpcional,
-    cantidad: texto,
+    cantidad: textoOpcional,
     dosis: texto,
     frecuencia: texto,
     duracion: texto,
@@ -187,12 +284,18 @@ const recetaItem = z
     message: "Indique un medicamento del catálogo o una descripción",
   });
 
+const items = z.array(recetaItem).min(1, "El récipe necesita al menos un medicamento");
+
+/** Guarda los items en el orden en que se escribieron. */
+const conOrden = (lista: unknown) => (lista as Datos[]).map((item, orden) => ({ ...item, orden }));
+
 const receta = z.object({
   pacienteId: texto,
   medicoId: texto,
   consultaId: textoOpcional,
+  enfermedadId: textoOpcional,
   indicacionesGenerales: textoOpcional,
-  items: z.array(recetaItem).min(1, "El récipe necesita al menos un medicamento"),
+  items,
 });
 
 export const recursoRecetas: ConfigRecurso = {
@@ -203,13 +306,70 @@ export const recursoRecetas: ConfigRecurso = {
   include: {
     paciente: true,
     medico: { include: { personal: true, especialidades: true } },
-    items: { include: { medicamento: true } },
+    items: { include: { medicamento: true }, orderBy: { orden: "asc" } },
   },
   orderBy: { numero: "desc" },
-  aCrear: ({ items, ...resto }) => ({ ...resto, items: { create: items } }),
+  aCrear: ({ items, ...resto }) => ({ ...resto, items: { create: conOrden(items) } }),
   // Al actualizar los items se reemplaza la lista completa.
   aActualizar: ({ items, ...resto }) =>
-    items ? { ...resto, items: { deleteMany: {}, create: items } } : resto,
+    items ? { ...resto, items: { deleteMany: {}, create: conOrden(items) } } : resto,
+};
+
+// Plantillas: medicamentos que el médico receta a diario, para reutilizarlos en un récipe nuevo.
+const plantilla = z.object({
+  nombre: texto,
+  medicoId: texto,
+  indicacionesGenerales: textoOpcional,
+  items,
+});
+
+export const recursoPlantillas: ConfigRecurso = {
+  modelo: "plantillaReceta",
+  crear: plantilla,
+  actualizar: plantilla.omit({ medicoId: true }).partial(),
+  camposBusqueda: ["nombre"],
+  include: { items: { include: { medicamento: true }, orderBy: { orden: "asc" } } },
+  orderBy: { nombre: "asc" },
+  aCrear: ({ items, ...resto }) => ({ ...resto, items: { create: conOrden(items) } }),
+  aActualizar: ({ items, ...resto }) =>
+    items ? { ...resto, items: { deleteMany: {}, create: conOrden(items) } } : resto,
+};
+
+// Protocolos: tratamiento habitual por enfermedad y grupo de edad. Llenan el récipe automáticamente.
+const numeroPositivo = z.number().positive().optional().nullable();
+const protocoloItem = z
+  .object({
+    medicamentoId: textoOpcional,
+    descripcion: textoOpcional,
+    cantidad: textoOpcional,
+    dosis: z.string().trim().optional().default(""),
+    frecuencia: texto,
+    duracion: texto,
+    indicaciones: textoOpcional,
+    dosisMgKg: numeroPositivo,
+    dosisMaxMg: numeroPositivo,
+    mgPorMl: numeroPositivo,
+  })
+  .refine((i) => i.medicamentoId || i.descripcion, { message: "Indique un medicamento del catálogo o una descripción" })
+  .refine((i) => i.dosis || i.dosisMgKg, { message: "Indique la dosis fija o la dosis por kg" });
+
+const protocolo = z.object({
+  enfermedadId: texto,
+  grupo: z.enum(["ADULTO", "PEDIATRICO"]),
+  indicacionesGenerales: textoOpcional,
+  notas: textoOpcional,
+  items: z.array(protocoloItem).min(1, "El protocolo necesita al menos un medicamento"),
+});
+
+export const recursoProtocolos: ConfigRecurso = {
+  modelo: "protocolo",
+  crear: protocolo,
+  actualizar: protocolo.omit({ enfermedadId: true, grupo: true }).partial(),
+  include: { enfermedad: true, items: { include: { medicamento: true }, orderBy: { orden: "asc" } } },
+  orderBy: [{ enfermedad: { codigoCie10: "asc" } }, { grupo: "asc" }],
+  aCrear: ({ items, ...resto }) => ({ ...resto, items: { create: conOrden(items) } }),
+  aActualizar: ({ items, ...resto }) =>
+    items ? { ...resto, items: { deleteMany: {}, create: conOrden(items) } } : resto,
 };
 
 // ─── Enfermedades y medicamentos ─────────────────────────────────────

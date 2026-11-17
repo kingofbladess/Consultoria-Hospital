@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/app/globals.css"
+        ],
+        "createdAt": "2026-11-17T01:06:27.889Z",
+        "reason": "brand kit: branding-kit/branding-kit/BRANDING.md, Semántica de operación, exige para el KPI principal una barra bg-primary (absolute inset-y-4 left-0 w-1 rounded-r-full)"
+      }
+    ]
+  }
+}

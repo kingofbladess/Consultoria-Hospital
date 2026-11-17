@@ -20,16 +20,16 @@ enum Rol {
 }
 
 model Usuario {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  nombre       String
-  claveHash    String
-  rol          Rol       @default(RECEPCION)
-  activo       Boolean   @default(true)
-  personalId   String?   @unique
-  personal     Personal? @relation(fields: [personalId], references: [id])
-  creadoEn     DateTime  @default(now())
-  actualizadoEn DateTime @updatedAt
+  id            String    @id @default(cuid())
+  email         String    @unique
+  nombre        String
+  claveHash     String
+  rol           Rol       @default(RECEPCION)
+  activo        Boolean   @default(true)
+  personalId    String?   @unique
+  personal      Personal? @relation(fields: [personalId], references: [id])
+  creadoEn      DateTime  @default(now())
+  actualizadoEn DateTime  @updatedAt
 }
 
 enum TipoPersonal {
@@ -53,6 +53,9 @@ model Personal {
   email         String?
   fechaIngreso  DateTime?
   activo        Boolean      @default(true)
+  /// Personal militar: componente de la FANB (EJB, ARBV, AMB, GNB, MB) y grado (categoría:abreviatura).
+  componente    String?
+  grado         String?
   medico        Medico?
   usuario       Usuario?
   creadoEn      DateTime     @default(now())
@@ -61,20 +64,23 @@ model Personal {
 
 /// Datos profesionales de un miembro del personal que es médico.
 model Medico {
-  id               String         @id @default(cuid())
-  personalId       String         @unique
-  personal         Personal       @relation(fields: [personalId], references: [id], onDelete: Cascade)
-  numeroMpps       String         @unique
-  numeroColegio    String?
-  firmaUrl         String?
-  selloUrl         String?
-  especialidades   Especialidad[]
-  horarios         Horario[]
-  citas            Cita[]
-  consultas        Consulta[]
-  recetas          Receta[]
-  creadoEn         DateTime       @default(now())
-  actualizadoEn    DateTime       @updatedAt
+  id             String            @id @default(cuid())
+  personalId     String            @unique
+  personal       Personal          @relation(fields: [personalId], references: [id], onDelete: Cascade)
+  numeroMpps     String            @unique
+  numeroColegio  String?
+  /// Imágenes que aparecen en cada récipe.
+  logoUrl        String?
+  firmaUrl       String?
+  selloUrl       String?
+  especialidades Especialidad[]
+  plantillas     PlantillaReceta[]
+  horarios       Horario[]
+  citas          Cita[]
+  consultas      Consulta[]
+  recetas        Receta[]
+  creadoEn       DateTime          @default(now())
+  actualizadoEn  DateTime          @updatedAt
 }
 
 // ─── Especialidades y consultorios ───────────────────────────────────
@@ -144,6 +150,9 @@ model Paciente {
   tipoSangre      String?
   alergias        String?
   antecedentes    String?
+  /// Si es personal militar: componente de la FANB y grado (categoría:abreviatura, ver src/lib/marca/grados.ts).
+  componente      String?
+  grado           String?
   citas           Cita[]
   consultas       Consulta[]
   recetas         Receta[]
@@ -176,21 +185,30 @@ model Cita {
 
 /// Registro de la historia clínica.
 model Consulta {
-  id            String      @id @default(cuid())
-  pacienteId    String
-  paciente      Paciente    @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
-  medicoId      String
-  medico        Medico      @relation(fields: [medicoId], references: [id])
-  citaId        String?     @unique
-  cita          Cita?       @relation(fields: [citaId], references: [id])
-  fecha         DateTime    @default(now())
-  motivo        String
-  examenFisico  String?
-  diagnostico   String?
-  enfermedadId  String?
-  enfermedad    Enfermedad? @relation(fields: [enfermedadId], references: [id])
-  plan          String?
-  recetas       Receta[]
+  id                     String      @id @default(cuid())
+  pacienteId             String
+  paciente               Paciente    @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  medicoId               String
+  medico                 Medico      @relation(fields: [medicoId], references: [id])
+  citaId                 String?     @unique
+  cita                   Cita?       @relation(fields: [citaId], references: [id])
+  fecha                  DateTime    @default(now())
+  motivo                 String
+  examenFisico           String?
+  diagnostico            String?
+  enfermedadId           String?
+  enfermedad             Enfermedad? @relation(fields: [enfermedadId], references: [id])
+  plan                   String?
+  recetas                Receta[]
+  /// Signos vitales tomados en la consulta.
+  tensionSistolica       Int?
+  tensionDiastolica      Int?
+  frecuenciaCardiaca     Int?
+  frecuenciaRespiratoria Int?
+  temperatura            Float?
+  saturacion             Int?
+  pesoKg                 Float?
+  tallaCm                Float?
 }
 
 // ─── Récipes ─────────────────────────────────────────────────────────
@@ -204,6 +222,9 @@ model Receta {
   medico                Medico       @relation(fields: [medicoId], references: [id])
   consultaId            String?
   consulta              Consulta?    @relation(fields: [consultaId], references: [id])
+  /// Diagnóstico por el que se emite (no se imprime en el récipe).
+  enfermedadId          String?
+  enfermedad            Enfermedad?  @relation(fields: [enfermedadId], references: [id])
   fecha                 DateTime     @default(now())
   indicacionesGenerales String?
   items                 RecetaItem[]
@@ -217,11 +238,86 @@ model RecetaItem {
   medicamento   Medicamento? @relation(fields: [medicamentoId], references: [id])
   /// Texto libre cuando el medicamento no está en el catálogo.
   descripcion   String?
-  cantidad      String
+  cantidad      String?
   dosis         String
   frecuencia    String
   duracion      String
   indicaciones  String?
+  orden         Int          @default(0)
+}
+
+/// Medicamentos que un médico receta con frecuencia, listos para reutilizar.
+model PlantillaReceta {
+  id                    String          @id @default(cuid())
+  nombre                String
+  medicoId              String
+  medico                Medico          @relation(fields: [medicoId], references: [id], onDelete: Cascade)
+  indicacionesGenerales String?
+  items                 PlantillaItem[]
+  creadoEn              DateTime        @default(now())
+
+  @@unique([medicoId, nombre])
+}
+
+model PlantillaItem {
+  id            String          @id @default(cuid())
+  plantillaId   String
+  plantilla     PlantillaReceta @relation(fields: [plantillaId], references: [id], onDelete: Cascade)
+  medicamentoId String?
+  medicamento   Medicamento?    @relation(fields: [medicamentoId], references: [id], onDelete: SetNull)
+  descripcion   String?
+  cantidad      String?
+  dosis         String
+  frecuencia    String
+  duracion      String
+  indicaciones  String?
+  orden         Int             @default(0)
+}
+
+// ─── Protocolos de tratamiento ───────────────────────────────────────
+
+/// Grupo de edad para el que aplica un protocolo. Pediátrico: menores de 12 años.
+enum GrupoEtario {
+  ADULTO
+  PEDIATRICO
+}
+
+/// Tratamiento habitual de una enfermedad para un grupo de edad.
+/// Llena el récipe automáticamente; el médico lo revisa antes de emitirlo.
+model Protocolo {
+  id                    String          @id @default(cuid())
+  enfermedadId          String
+  enfermedad            Enfermedad      @relation(fields: [enfermedadId], references: [id], onDelete: Cascade)
+  grupo                 GrupoEtario
+  indicacionesGenerales String?
+  /// Observaciones para el médico (fuente, advertencias); no se imprimen.
+  notas                 String?
+  items                 ProtocoloItem[]
+  creadoEn              DateTime        @default(now())
+  actualizadoEn         DateTime        @updatedAt
+
+  @@unique([enfermedadId, grupo])
+}
+
+model ProtocoloItem {
+  id            String       @id @default(cuid())
+  protocoloId   String
+  protocolo     Protocolo    @relation(fields: [protocoloId], references: [id], onDelete: Cascade)
+  medicamentoId String?
+  medicamento   Medicamento? @relation(fields: [medicamentoId], references: [id], onDelete: SetNull)
+  descripcion   String?
+  cantidad      String?
+  /// Dosis fija. Si el protocolo usa dosis por peso, se calcula al escribir el peso del paciente.
+  dosis         String       @default("")
+  frecuencia    String
+  duracion      String
+  indicaciones  String?
+  orden         Int          @default(0)
+  /// Dosis por peso (pediatría): mg por kg por toma, con un máximo por toma.
+  dosisMgKg     Float?
+  dosisMaxMg    Float?
+  /// Concentración de la presentación líquida en mg por ml, para convertir la dosis a ml.
+  mgPorMl       Float?
 }
 
 // ─── Enfermedades y vademécum ────────────────────────────────────────
@@ -235,6 +331,8 @@ model Enfermedad {
   especialidad   Especialidad? @relation(fields: [especialidadId], references: [id])
   medicamentos   Medicamento[]
   consultas      Consulta[]
+  recetas        Receta[]
+  protocolos     Protocolo[]
 }
 
 enum ViaAdministracion {
@@ -268,9 +366,28 @@ model Medicamento {
   codigoExterno          String?
   enfermedades           Enfermedad[]
   recetaItems            RecetaItem[]
+  plantillaItems         PlantillaItem[]
+  protocoloItems         ProtocoloItem[]
   creadoEn               DateTime          @default(now())
   actualizadoEn          DateTime          @updatedAt
 
   @@unique([fuente, codigoExterno])
   @@index([principioActivo])
+}
+
+// ─── Auditoría ───────────────────────────────────────────────────────
+
+/// Bitácora: quién creó, cambió o eliminó cada registro, y quién ingresó al sistema.
+model Auditoria {
+  id            String   @id @default(cuid())
+  fecha         DateTime @default(now())
+  usuarioId     String?
+  usuarioNombre String
+  accion        String
+  recurso       String
+  registroId    String?
+  detalle       String?
+
+  @@index([fecha])
+  @@index([recurso, registroId])
 }

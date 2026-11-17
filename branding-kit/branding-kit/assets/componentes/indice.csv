@@ -1,0 +1,6 @@
+codigo_componente,nombre,archivo,slug_publico,estado,nota
+EJB,Ejército Bolivariano,ejercito.png,ejercito,con arte,Escudo con margen transparente (~28 %): el script lo recorta al arte
+ARBV,Armada Bolivariana,armada.png,armada,con arte,
+AMB,Aviación Militar Bolivariana,aviacion.png,aviacion,con arte,
+GNB,Guardia Nacional Bolivariana,guardia.png,guardia-nacional,con arte,La URL pública conserva «guardia-nacional»
+MB,Milicia Bolivariana,,,SIN ARTE,Componente ESPECIAL del catálogo; no hay escudo en el kit
