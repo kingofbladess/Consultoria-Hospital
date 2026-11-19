@@ -731,28 +731,69 @@ input.calculada { font-family: var(--font-mono); background: var(--muted); curso
 
 /* ─── Ingreso: único lienzo oscuro (kit) ────────────────────────── */
 
-.acceso { min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); background: var(--background); }
+.acceso {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  padding: clamp(12px, 2vw, 32px);
+  background: radial-gradient(ellipse at 85% 0%, var(--card), transparent 55%), var(--background);
+}
 .acceso-marca-panel {
-  position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 40px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(32px, 5vw, 84px);
+  border-radius: 24px;
   color: var(--brand-foreground);
-  background: linear-gradient(160deg, var(--brand-mid), var(--brand-deep) 55%, var(--brand-ink));
+  background:
+    radial-gradient(ellipse at 100% 92%, oklch(0.38 0.065 107), transparent 62%),
+    linear-gradient(145deg, var(--brand-mid), var(--brand-deep) 72%, var(--brand-ink));
 }
-.acceso-reticula { position: absolute; inset: 0; opacity: 0.06; pointer-events: none; }
-.acceso-identidad { position: relative; margin: auto 0; max-width: 440px; animation: page-enter var(--duration-slow) var(--ease-fluid) both; }
+.acceso-marca-panel::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -180px;
+  bottom: -260px;
+  width: 580px;
+  aspect-ratio: 1;
+  border: 1px solid oklch(0.83 0.06 107 / 0.18);
+  border-radius: 50%;
+  box-shadow: 0 0 0 52px oklch(0.83 0.06 107 / 0.05), 0 0 0 104px oklch(0.83 0.06 107 / 0.03);
+  pointer-events: none;
+}
+.acceso-reticula {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  opacity: 0.12;
+  mask-image: linear-gradient(140deg, transparent 25%, #000);
+  pointer-events: none;
+}
+.acceso-marca { display: flex; align-items: center; gap: 16px; font-size: 0.8125rem; font-weight: 600; line-height: 1.5; }
+.acceso-identidad { margin: auto 0; padding-block: 56px; animation: page-enter var(--duration-slow) var(--ease-fluid) both; }
 .acceso-emblema {
-  display: inline-grid; place-items: center; width: 112px; height: 112px; margin-bottom: 24px; border-radius: 50%;
-  background: var(--brand-emblem); border: 1px solid var(--brand-line);
+  display: grid; place-items: center; flex: none; width: 96px; height: 96px; border-radius: 50%;
+  background: var(--brand-emblem); border: 1px solid oklch(0.83 0.06 107 / 0.25);
 }
-.acceso-identidad .text-caption { color: var(--brand-muted); margin: 0 0 8px; }
-.acceso-identidad h1 { color: var(--brand-foreground); font-size: 1.875rem; line-height: 2.25rem; font-weight: 700; letter-spacing: 0.025em; }
-.acceso-descripcion { margin: 12px 0 0; color: var(--brand-muted); font-size: 0.875rem; max-width: 36ch; }
-.acceso-pie { position: relative; margin: 0; font-size: 11px; color: var(--brand-muted); }
-.acceso-formulario { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 40px 24px; }
-.acceso-tarjeta { width: min(400px, 100%); padding: 28px; animation: page-enter var(--duration-slow) var(--ease-fluid) both; }
-.acceso-tarjeta .text-caption { margin: 0; }
-.acceso-tarjeta h2 { font-size: 1.5rem; line-height: 2rem; font-weight: 600; margin: 4px 0 2px; }
-.acceso-tarjeta > p.suave { margin: 0 0 20px; }
-.acceso-aviso { margin: 0; font-size: 0.75rem; color: var(--muted-foreground); }
+.acceso-identidad .text-caption { color: oklch(0.83 0.075 107); margin: 0 0 16px; }
+.acceso-identidad h1 { margin: 0; color: var(--brand-foreground); font-size: clamp(2.5rem, 5.7vw, 6.25rem); line-height: 0.99; font-weight: 650; letter-spacing: -0.075em; }
+.acceso-descripcion { margin: 24px 0 0; color: oklch(0.83 0.022 107); font-size: 1rem; line-height: 1.65; max-width: 37ch; }
+.acceso-formulario { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 40px clamp(20px, 4vw, 64px); }
+.acceso-tarjeta {
+  width: min(440px, 100%);
+  padding: clamp(22px, 3vw, 42px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: 0 14px 48px oklch(0.24 0.04 107 / 0.08);
+  animation: page-enter var(--duration-slow) var(--ease-fluid) both;
+}
+.acceso-tarjeta h2 { font-size: clamp(1.625rem, 3vw, 2.25rem); line-height: 1.15; font-weight: 650; letter-spacing: -0.045em; margin: 0 0 10px; }
+.acceso-tarjeta > p.suave { margin: 0 0 26px; line-height: 1.55; }
+.acceso-aviso { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 0.75rem; color: var(--muted-foreground); }
 .formulario-ingreso { display: flex; flex-direction: column; gap: 14px; }
 .formulario-ingreso[data-sacudir] .error-ingreso { animation: page-enter var(--duration-base) var(--ease-fluid) both; }
 .entrada-con-icono {
@@ -764,7 +805,7 @@ input.calculada { font-family: var(--font-mono); background: var(--muted); curso
 .entrada-con-icono input { border: 0; height: 42px; padding: 0; background: transparent; box-shadow: none !important; }
 .aviso-mayus { font-size: 0.75rem; color: var(--warning-foreground); }
 .error-ingreso { margin: 0; padding: 10px 12px; border-radius: var(--radius-lg); font-size: 0.8125rem; color: var(--destructive); background: color-mix(in oklch, var(--destructive) 10%, var(--card)); }
-.boton.ingresar { width: 100%; margin-top: 4px; }
+.boton.ingresar { width: 100%; min-height: 48px; margin-top: 8px; }
 
 /* ─── Animaciones del kit ───────────────────────────────────────── */
 
@@ -797,14 +838,16 @@ input.calculada { font-family: var(--font-mono); background: var(--muted); curso
   .barra-derecha .boton span { display: none; }
   .barra-derecha .boton { width: 40px; padding: 0; }
   .contenido { padding: 16px; }
-  .acceso { grid-template-columns: 1fr; }
-  .acceso-marca-panel { padding: 24px 16px; min-height: 0; }
-  .acceso-identidad { margin: 0; display: grid; grid-template-columns: auto 1fr; column-gap: 16px; align-items: center; }
-  .acceso-emblema { width: 72px; height: 72px; margin: 0; grid-row: span 2; }
-  .acceso-emblema .emblema { width: 36px; height: auto; }
-  .acceso-identidad h1 { font-size: 1.375rem; line-height: 1.75rem; }
-  .acceso-descripcion, .acceso-pie { display: none; }
-  .acceso-formulario { padding: 24px 16px; justify-content: flex-start; }
+  .acceso { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  .acceso-marca-panel { padding: 22px; border-radius: 18px; }
+  .acceso-marca { gap: 12px; font-size: 0.75rem; }
+  .acceso-identidad { margin: 0; padding: 22px 0 2px; }
+  .acceso-identidad .text-caption { margin-bottom: 8px; }
+  .acceso-emblema { width: 56px; height: 56px; }
+  .acceso-emblema .emblema { width: 30px; height: auto; }
+  .acceso-identidad h1 { font-size: clamp(1.85rem, 7vw, 3rem); line-height: 1.1; letter-spacing: -0.055em; }
+  .acceso-salto, .acceso-descripcion { display: none; }
+  .acceso-formulario { padding: 20px 4px 12px; justify-content: flex-start; }
 }
 
 @media (max-width: 640px) {

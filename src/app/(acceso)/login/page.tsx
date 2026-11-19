@@ -1,42 +1,40 @@
 import type { Metadata } from "next";
 import { EmblemaMppd } from "@/components/Marca";
+import Icono from "@/components/Icono";
 import FormularioIngreso from "./FormularioIngreso";
 
 export const metadata: Metadata = { title: "Ingresar" };
 
-// Ingreso según el kit de marca: el panel izquierdo es el único lienzo oscuro de la aplicación,
-// con el emblema a 72 px en un círculo y la retícula al 6 %. El formulario va sobre el crema.
 export default async function Ingresar({ searchParams }: { searchParams: Promise<{ siguiente?: string }> }) {
   const { siguiente } = await searchParams;
   // Solo se acepta volver a una ruta interna, nunca a otro sitio.
   const destino = siguiente?.startsWith("/") && !siguiente.startsWith("//") ? siguiente : undefined;
 
   return (
-    <div className="acceso">
-      <section className="acceso-marca-panel">
+    <main className="acceso">
+      <section className="acceso-marca-panel" aria-labelledby="titulo-hospital">
         <div className="signin-grid-pattern acceso-reticula" aria-hidden="true" />
+        <div className="acceso-marca">
+          <span className="acceso-emblema"><EmblemaMppd tamano={72} /></span>
+          <span>Ministerio del Poder Popular<br />para la Defensa</span>
+        </div>
         <div className="acceso-identidad">
-          <span className="acceso-emblema">
-            <EmblemaMppd tamano={72} decorativo={false} />
-          </span>
-          <p className="text-caption">Gestión Hospitalaria · MPPD</p>
-          <h1>Consultoría Hospital</h1>
+          <p className="text-caption">Gestión hospitalaria</p>
+          <h1 id="titulo-hospital">Consultoría<br className="acceso-salto" /> Hospital</h1>
           <p className="acceso-descripcion">
             Pacientes, consultas, récipes y agenda del centro de salud, en una sola consola.
           </p>
         </div>
-        <p className="acceso-pie">Ministerio del Poder Popular para la Defensa · Venezuela</p>
       </section>
 
       <section className="acceso-formulario">
-        <div className="glass-panel glass-strong acceso-tarjeta">
-          <p className="text-caption suave">Acceso al sistema</p>
-          <h2>Ingresar</h2>
+        <div className="acceso-tarjeta">
+          <h2>Iniciar sesión</h2>
           <p className="suave">Use el usuario y la contraseña que le asignó administración.</p>
           <FormularioIngreso destino={destino} />
         </div>
-        <p className="acceso-aviso">Acceso solo para personal autorizado.</p>
+        <p className="acceso-aviso"><Icono nombre="candado" tamano={14} /> Acceso solo para personal autorizado.</p>
       </section>
-    </div>
+    </main>
   );
 }
