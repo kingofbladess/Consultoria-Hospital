@@ -1,0 +1,32 @@
+archivo,abreviatura,nivel,categoria,codigo_catalogo,nombre,aplica_a,estado
+GJ.png,G/J,O10,OFICIAL_GENERAL,,General en Jefe,"EJB, AMB, GNB",con arte
+GJ.png,A/J,O10,OFICIAL_GENERAL,,Almirante en Jefe,ARBV,con arte
+MG.png,M/G,O9,OFICIAL_GENERAL,,Mayor General,"EJB, AMB, GNB",con arte
+MG.png,ALM,O9,OFICIAL_GENERAL,,Almirante,ARBV,con arte
+GD.png,G/D,O8,OFICIAL_GENERAL,,General de División,"EJB, AMB, GNB",con arte
+GD.png,V/A,O8,OFICIAL_GENERAL,,Vicealmirante,ARBV,con arte
+GB.png,G/B,O7,OFICIAL_GENERAL,,General de Brigada,"EJB, AMB, GNB",con arte
+GB.png,C/A,O7,OFICIAL_GENERAL,,Contralmirante,ARBV,con arte
+CNEL.png,CNEL,O6,OFICIAL_SUPERIOR,,Coronel,"EJB, AMB, GNB",con arte
+CN.png,C/N,O6,OFICIAL_SUPERIOR,,Capitán de Navío,ARBV,con arte
+TCNEL.png,TCNEL,O5,OFICIAL_SUPERIOR,,Teniente Coronel,"EJB, AMB, GNB",con arte
+CF.png,C/F,O5,OFICIAL_SUPERIOR,,Capitán de Fragata,ARBV,con arte
+MAY.png,MAY,O4,OFICIAL_SUPERIOR,,Mayor,"EJB, AMB, GNB",con arte
+CC.png,C/C,O4,OFICIAL_SUPERIOR,,Capitán de Corbeta,ARBV,con arte
+CAP.png,CAP,O3,OFICIAL_SUBALTERNO,,Capitán,"EJB, AMB, GNB",con arte
+TN.png,T/N,O3,OFICIAL_SUBALTERNO,,Teniente de Navío,ARBV,con arte
+PTTE.png,PTTE,O2,OFICIAL_SUBALTERNO,,Primer Teniente,"EJB, AMB, GNB",con arte
+TF.png,T/F,O2,OFICIAL_SUBALTERNO,,Teniente de Fragata,ARBV,con arte
+TTE.png,TTE,O1,OFICIAL_SUBALTERNO,,Teniente,"EJB, AMB, GNB",con arte
+TC.png,T/C,O1,OFICIAL_SUBALTERNO,,Teniente de Corbeta,ARBV,con arte
+SS.png,S/S,TP7,TROPA_PROFESIONAL,TP_SGTOSUP,Sargento Supervisor,"EJB, ARBV, AMB, GNB",con arte
+SA.png,S/A,TP6,TROPA_PROFESIONAL,TP_SGTOAYU,Sargento Ayudante,"EJB, ARBV, AMB, GNB",con arte
+SM1.png,SM/1,TP5,TROPA_PROFESIONAL,TP_SM1,Sargento Mayor de Primera,"EJB, ARBV, AMB, GNB",con arte
+SM2.png,SM/2,TP4,TROPA_PROFESIONAL,TP_SM2,Sargento Mayor de Segunda,"EJB, ARBV, AMB, GNB",con arte
+SM3.png,SM/3,TP3,TROPA_PROFESIONAL,TP_SM3,Sargento Mayor de Tercera,"EJB, ARBV, AMB, GNB",con arte
+S1.png,S/1,TP2,TROPA_PROFESIONAL,TP_SGTO1,Sargento Primero,"EJB, ARBV, AMB, GNB",con arte
+S2.png,S/2,TP1,TROPA_PROFESIONAL,TP_SGTO2,Sargento Segundo,"EJB, ARBV, AMB, GNB",con arte
+S1.png,S/1,TA6,TROPA_ALISTADA,TA_SGTO1,Sargento Primero,"EJB, ARBV, AMB, GNB",con arte
+S2.png,S/2,TA5,TROPA_ALISTADA,TA_SGTO2,Sargento Segundo,"EJB, ARBV, AMB, GNB",con arte
+,C/1,TA4,TROPA_ALISTADA,TA_CBO1,Cabo Primero,"EJB, ARBV, AMB, GNB",SIN ARTE
+,C/2,TA3,TROPA_ALISTADA,TA_CBO2,Cabo Segundo,"EJB, ARBV, AMB, GNB",SIN ARTE

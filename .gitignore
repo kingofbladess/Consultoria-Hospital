@@ -1,0 +1,11 @@
+node_modules/
+.next/
+out/
+.env
+.env.local
+*.tsbuildinfo
+next-env.d.ts
+uploads/
+
+# Copia comprimida del kit de marca (la carpeta branding-kit/ es la fuente)
+/branding-kit.zip
