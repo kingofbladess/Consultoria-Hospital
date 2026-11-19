@@ -10,6 +10,18 @@ export const dynamic = "force-dynamic";
 
 const DIA_MS = 24 * 60 * 60 * 1000;
 
+function diaValido(dia: string | undefined): dia is string {
+  if (!dia || !/^\d{4}-\d{2}-\d{2}$/.test(dia)) return false;
+  const fecha = new Date(`${dia}T00:00:00Z`);
+  return Number.isFinite(fecha.getTime()) && fecha.toISOString().slice(0, 10) === dia;
+}
+
+function desplazarDia(dia: string, cantidad: number) {
+  const fecha = new Date(`${dia}T12:00:00Z`);
+  fecha.setUTCDate(fecha.getUTCDate() + cantidad);
+  return fecha.toISOString().slice(0, 10);
+}
+
 const descripciones: Record<string, string> = {
   "/pacientes": "Registrados",
   "/medicos": "En plantilla",
@@ -50,8 +62,11 @@ async function cargar(dia: string) {
   }
 }
 
-export default async function Inicio() {
-  const dia = diaLocal();
+export default async function Inicio({ searchParams }: { searchParams: Promise<{ dia?: string | string[] }> }) {
+  const hoy = diaLocal();
+  const parametros = await searchParams;
+  const diaSolicitado = typeof parametros.dia === "string" ? parametros.dia : undefined;
+  const dia = diaValido(diaSolicitado) ? diaSolicitado : hoy;
   const datos = await cargar(dia);
 
   return (
@@ -59,10 +74,21 @@ export default async function Inicio() {
       <header className={styles.cabecera}>
         <div>
           <h1>Panel principal</h1>
-          <time dateTime={dia}>
-            <Icono nombre="citas" tamano={16} />
-            <span>{fechaLarga(inicioDia(dia))}</span>
-          </time>
+          <div className={styles.fechaAgenda}>
+            <time dateTime={dia}>
+              <Icono nombre="citas" tamano={16} />
+              <span>{fechaLarga(inicioDia(dia))}</span>
+            </time>
+            <nav className={styles.navegacionDia} aria-label="Cambiar día de agenda">
+              <Link className="boton-icono" href={`/?dia=${desplazarDia(dia, -1)}`} aria-label="Día anterior" title="Día anterior">
+                <Icono nombre="flecha" tamano={16} className={styles.flechaAnterior} />
+              </Link>
+              {dia !== hoy && <Link className={styles.enlaceHoy} href="/">Hoy</Link>}
+              <Link className="boton-icono" href={`/?dia=${desplazarDia(dia, 1)}`} aria-label="Día siguiente" title="Día siguiente">
+                <Icono nombre="flecha" tamano={16} />
+              </Link>
+            </nav>
+          </div>
         </div>
         <div className="acciones">
           <Link href="/registro" className="boton">
@@ -114,9 +140,9 @@ export default async function Inicio() {
 
       {datos && (
         <div className={styles.actividad}>
-          <section className={styles.panel} aria-labelledby="agenda-hoy">
+          <section className={styles.panel} aria-labelledby="agenda-dia">
             <div className={styles.panelTitulo}>
-              <h2 id="agenda-hoy"><Icono nombre="citas" tamano={20} /> Citas de hoy</h2>
+              <h2 id="agenda-dia"><Icono nombre="citas" tamano={20} /> Citas del día</h2>
               <Link href={`/citas?dia=${dia}`}>Ver agenda <Icono nombre="flecha" tamano={15} /></Link>
             </div>
             {datos.citasHoy.length === 0 ? (

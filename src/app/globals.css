@@ -1104,3 +1104,70 @@ input, select, textarea { background: oklch(0.99 0.008 98); border-color: var(--
 @media (max-width: 640px) {
   .aviso-flotante { left: 16px; right: 16px; top: 64px; }
 }
+
+/* Botones de vidrio: el tinte y el borde mantienen contraste sobre el lienzo cálido. */
+.boton,
+.boton-icono {
+  -webkit-backdrop-filter: blur(12px) saturate(145%);
+  backdrop-filter: blur(12px) saturate(145%);
+  transition:
+    transform var(--duration-fast) var(--ease-fluid),
+    background-color var(--duration-fast) var(--ease-fluid),
+    border-color var(--duration-fast) var(--ease-fluid),
+    box-shadow var(--duration-fast) var(--ease-fluid),
+    color var(--duration-fast) var(--ease-fluid);
+}
+.boton {
+  background: color-mix(in oklch, var(--superficie) 76%, transparent);
+  border-color: color-mix(in oklch, var(--borde-calido) 76%, white);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, white 78%, transparent), 0 5px 14px -11px var(--glass-shadow);
+}
+.boton:hover:not(:disabled):not([aria-disabled="true"]) {
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, white 84%, transparent), 0 7px 16px -10px var(--glass-shadow);
+}
+.boton.primario {
+  background: linear-gradient(180deg, color-mix(in oklch, white 24%, transparent), color-mix(in oklch, white 5%, transparent) 48%, transparent), color-mix(in oklch, var(--primary) 94%, transparent);
+  border-color: color-mix(in oklch, var(--primary) 54%, white);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, white 68%, transparent), inset 0 0 0 1px color-mix(in oklch, white 14%, transparent), 0 7px 18px -12px color-mix(in oklch, var(--primary) 72%, var(--glass-shadow));
+}
+.boton.primario:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: linear-gradient(180deg, color-mix(in oklch, white 30%, transparent), color-mix(in oklch, white 7%, transparent) 48%, transparent), color-mix(in oklch, var(--primary) 94%, transparent);
+}
+.boton.dorado {
+  color: var(--brand-ink);
+  background: linear-gradient(180deg, color-mix(in oklch, white 38%, transparent), color-mix(in oklch, white 10%, transparent) 50%, transparent), color-mix(in oklch, var(--oro-vivo) 93%, transparent);
+  border-color: color-mix(in oklch, var(--oro-vivo) 58%, white);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, white 82%, transparent), inset 0 0 0 1px color-mix(in oklch, white 18%, transparent), 0 7px 18px -11px color-mix(in oklch, var(--oro) 58%, var(--glass-shadow));
+}
+.boton.dorado:hover:not(:disabled):not([aria-disabled="true"]) {
+  color: var(--brand-ink);
+  background: linear-gradient(180deg, color-mix(in oklch, white 44%, transparent), color-mix(in oklch, white 14%, transparent) 50%, transparent), color-mix(in oklch, var(--oro-vivo) 93%, transparent);
+}
+.boton.peligro {
+  border-color: color-mix(in oklch, var(--destructive) 24%, var(--borde-calido));
+  box-shadow: inset 0 1px 0 color-mix(in oklch, white 78%, transparent), 0 5px 14px -11px var(--glass-shadow);
+}
+.boton-icono {
+  border: 1px solid color-mix(in oklch, var(--borde-calido) 58%, transparent);
+  background: color-mix(in oklch, var(--superficie) 48%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, white 72%, transparent);
+}
+.boton-icono:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 color-mix(in oklch, white 85%, transparent), 0 5px 12px -9px var(--glass-shadow); }
+.boton:disabled, .boton[aria-disabled="true"] { box-shadow: none; }
+.barra-superior .boton-icono {
+  border-color: color-mix(in oklch, var(--brand-foreground) 14%, transparent);
+  background: color-mix(in oklch, var(--brand-foreground) 7%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--brand-foreground) 24%, transparent);
+}
+.barra-superior .boton-icono:hover { background: color-mix(in oklch, var(--brand-foreground) 14%, transparent); }
+.lateral .boton-icono { border-color: color-mix(in oklch, var(--brand-foreground) 12%, transparent); background: color-mix(in oklch, var(--brand-foreground) 6%, transparent); }
+.lateral .boton-icono:hover { background: color-mix(in oklch, var(--vino-vivo) 25%, transparent); }
+
+@media (prefers-reduced-transparency: reduce) {
+  .boton, .boton-icono { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .boton { background: var(--superficie); }
+  .boton-icono { background: var(--superficie-2); }
+  .boton.primario { background: var(--primary); }
+  .barra-superior .boton-icono, .lateral .boton-icono { background: color-mix(in oklch, var(--brand-foreground) 12%, var(--brand-deep)); }
+}

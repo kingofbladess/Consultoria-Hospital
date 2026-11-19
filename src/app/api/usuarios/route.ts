@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { respuestaError } from "@/lib/api";
+import { ErrorNegocio, respuestaError } from "@/lib/api";
 import { registrar, sesionDePeticion } from "@/lib/auditoria";
 import { cifrarClave } from "@/lib/clave";
 import { prisma } from "@/lib/prisma";
@@ -21,6 +21,11 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const d = z.object({ ...datosUsuario, clave }).parse(await req.json());
+    if (d.rol === "MEDICO") {
+      if (!d.personalId) throw new ErrorNegocio("Vincule el usuario médico con su ficha de personal y médico.");
+      const personal = await prisma.personal.findUnique({ where: { id: d.personalId }, include: { medico: true } });
+      if (!personal?.activo || !personal.medico || personal.tipo !== "MEDICO") throw new ErrorNegocio("El usuario médico debe vincularse a personal activo con ficha de médico.");
+    }
     const usuario = await prisma.usuario.create({
       data: { nombre: d.nombre, email: d.email, rol: d.rol, personalId: d.personalId || null, activo: d.activo ?? true, claveHash: await cifrarClave(d.clave) },
       select: SIN_CLAVE,

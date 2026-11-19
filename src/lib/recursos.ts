@@ -38,11 +38,10 @@ function validarGrado(d: { componente?: string | null; grado?: string | null }, 
 
 /** Igual que validarGrado, para los datos personales que viajan dentro del médico. */
 function validarGradoAnidado(p: { componente?: string | null; grado?: string | null }, ctx: z.RefinementCtx) {
-  if (p.grado && p.componente && !gradosDeComponente(p.componente).some((g) => g.clave === p.grado)) {
-    ctx.addIssue({ code: "custom", path: ["personal", "grado"], message: "Ese grado no existe en el componente elegido" });
-  }
-  if (p.grado && p.componente === null) {
+  if (p.grado && !p.componente) {
     ctx.addIssue({ code: "custom", path: ["personal", "grado"], message: "Indique primero el componente" });
+  } else if (p.grado && p.componente && !gradosDeComponente(p.componente).some((g) => g.clave === p.grado)) {
+    ctx.addIssue({ code: "custom", path: ["personal", "grado"], message: "Ese grado no existe en el componente elegido" });
   }
 }
 
@@ -159,6 +158,24 @@ export const recursoHorarios: ConfigRecurso = {
   modelo: "horario",
   crear: horario,
   actualizar: horario.partial(),
+  validar: async (d, id) => {
+    const actual = id ? await prisma.horario.findUnique({ where: { id } }) : null;
+    const inicio = (d.horaInicio as string | undefined) ?? actual?.horaInicio;
+    const fin = (d.horaFin as string | undefined) ?? actual?.horaFin;
+    if (inicio && fin && fin <= inicio) throw new ErrorNegocio("La hora de fin debe ser posterior a la hora de inicio.");
+    const medicoId = (d.medicoId as string | undefined) ?? actual?.medicoId;
+    const consultorioId = (d.consultorioId as string | undefined) ?? actual?.consultorioId;
+    const dia = (d.dia as string | undefined) ?? actual?.dia;
+    if (!inicio || !fin || !medicoId || !consultorioId || !dia) return;
+    const conflictos = await prisma.horario.findMany({
+      where: { id: id ? { not: id } : undefined, dia: dia as "LUNES" | "MARTES" | "MIERCOLES" | "JUEVES" | "VIERNES" | "SABADO" | "DOMINGO", OR: [{ medicoId }, { consultorioId }] },
+      select: { medicoId: true, consultorioId: true, horaInicio: true, horaFin: true },
+    });
+    const choque = conflictos.find((h) => inicio < h.horaFin && fin > h.horaInicio);
+    if (choque) throw new ErrorNegocio(choque.medicoId === medicoId
+      ? "El médico ya tiene un horario que se cruza ese día."
+      : "El consultorio ya está ocupado en ese horario.");
+  },
   include: { medico: { include: { personal: true } }, consultorio: true },
   orderBy: [{ dia: "asc" }, { horaInicio: "asc" }],
 };
@@ -263,6 +280,17 @@ export const recursoConsultas: ConfigRecurso = {
   modelo: "consulta",
   crear: consulta,
   actualizar: consulta.omit({ pacienteId: true, medicoId: true }).partial(),
+  validar: async (d, id) => {
+    const actual = id ? await prisma.consulta.findUnique({ where: { id } }) : null;
+    const citaId = Object.hasOwn(d, "citaId") ? d.citaId as string | null : actual?.citaId;
+    if (!citaId) return;
+    const pacienteId = (d.pacienteId as string | undefined) ?? actual?.pacienteId;
+    const medicoId = (d.medicoId as string | undefined) ?? actual?.medicoId;
+    const cita = await prisma.cita.findUnique({ where: { id: citaId } });
+    if (!cita) throw new ErrorNegocio("La cita seleccionada no existe.");
+    if (["CANCELADA", "NO_ASISTIO"].includes(cita.estado)) throw new ErrorNegocio("No se puede registrar una consulta desde una cita cancelada o con inasistencia.");
+    if (cita.pacienteId !== pacienteId || cita.medicoId !== medicoId) throw new ErrorNegocio("La cita debe corresponder al mismo paciente y médico de la consulta.");
+  },
   camposBusqueda: ["motivo", "diagnostico"],
   include: { paciente: true, medico: { include: { personal: true } }, enfermedad: true },
   orderBy: { fecha: "desc" },
@@ -302,6 +330,16 @@ export const recursoRecetas: ConfigRecurso = {
   modelo: "receta",
   crear: receta,
   actualizar: receta.omit({ pacienteId: true, medicoId: true }).partial(),
+  validar: async (d, id) => {
+    const actual = id ? await prisma.receta.findUnique({ where: { id } }) : null;
+    const consultaId = Object.hasOwn(d, "consultaId") ? d.consultaId as string | null : actual?.consultaId;
+    if (!consultaId) return;
+    const pacienteId = (d.pacienteId as string | undefined) ?? actual?.pacienteId;
+    const medicoId = (d.medicoId as string | undefined) ?? actual?.medicoId;
+    const vinculada = await prisma.consulta.findUnique({ where: { id: consultaId } });
+    if (!vinculada) throw new ErrorNegocio("La consulta seleccionada no existe.");
+    if (vinculada.pacienteId !== pacienteId || vinculada.medicoId !== medicoId) throw new ErrorNegocio("La receta debe corresponder al paciente y médico de la consulta.");
+  },
   camposBusqueda: ["indicacionesGenerales"],
   include: {
     paciente: true,

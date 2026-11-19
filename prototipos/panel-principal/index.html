@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f3f2e8" />
+    <title>Panel principal · Consultoría Hospital</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="dashboard.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <a class="brand" href="#inicio" aria-label="Consultoría Hospital, inicio">
+          <img src="assets/mppd-32.png" alt="" width="34" height="34" />
+          <span><strong>Consultoría Hospital</strong><small>Gestión hospitalaria · MPPD</small></span>
+        </a>
+        <nav class="side-nav" aria-label="Navegación principal">
+          <a class="nav-link active" href="#inicio"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg><span>Panel principal</span></a>
+          <a class="nav-link" href="#registro"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4m-4-9h8m-8-4h5"/></svg><span>Estación de registro</span></a>
+          <div class="nav-rule"></div>
+          <a class="nav-link" href="#pacientes"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.3-3.7 2.5-5.5 6.5-5.5s6.2 1.8 6.5 5.5M17 5.5a3.5 3.5 0 0 1 0 6.9m2 2.4c1.6.6 2.4 2.1 2.6 4.7"/></svg><span>Pacientes</span></a>
+          <a class="nav-link" href="#medicos"><svg viewBox="0 0 24 24"><path d="M6 4v5a6 6 0 0 0 12 0V4M4 4h4m8 0h4M12 15v2a4 4 0 0 0 8 0v-1"/><circle cx="20" cy="14" r="1"/></svg><span>Médicos</span></a>
+          <a class="nav-link" href="#consultas"><svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm3 5h8m-8 4h8m-8 4h5"/></svg><span>Consultas</span></a>
+          <a class="nav-link" href="#recetas"><svg viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm3 5h4m-6 4h8m-8 4h6"/><path d="M15 8h.01"/></svg><span>Récipes</span></a>
+          <a class="nav-link" href="#medicamentos"><svg viewBox="0 0 24 24"><path d="m8 4 12 12a4.2 4.2 0 0 1-6 6L2 10a4.2 4.2 0 0 1 6-6Zm-2 8 6-6"/></svg><span>Medicamentos</span></a>
+          <a class="nav-link" href="#citas"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18m-13 4h2m4 0h2m-8 3h2"/></svg><span>Citas</span></a>
+          <div class="nav-rule"></div>
+          <a class="nav-link" href="#usuarios"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.3-3.7 2.5-5.5 6.5-5.5 2.1 0 3.7.5 4.8 1.5M17 11V5m-3 3h6m-2.5 5.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z"/></svg><span>Usuarios y auditoría</span></a>
+        </nav>
+        <div class="profile"><div class="avatar">MG</div><div><strong>María González</strong><small>Administración</small></div><button class="icon-button logout" aria-label="Cerrar sesión" title="Cerrar sesión"><svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5m5 5H3m9-9h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg></button></div>
+      </aside>
+
+      <main class="main" id="inicio">
+        <header class="topbar">
+          <button class="icon-button menu-toggle" aria-label="Abrir navegación" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+          <div class="topbar-title"><span>CONSULTORÍA HOSPITAL</span><span class="status"><i></i> Sistema operativo</span></div>
+          <div class="topbar-actions"><a class="button topbar-create" href="#recetas" aria-label="Crear récipe" title="Crear récipe"><svg viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm3 5h4m-6 4h8m-8 4h6"/></svg><span>Crear récipe</span></a><span class="user-chip">MG <span>María González</span></span><button class="icon-button" aria-label="Notificaciones"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12h4"/></svg><i class="notification-dot"></i></button></div>
+        </header>
+        <div class="content">
+          <section class="page-heading">
+            <div class="heading-copy"><h1>Panel principal</h1><div class="date-line"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><time id="selected-date"></time><nav class="date-nav" aria-label="Cambiar día de agenda"><button class="icon-button" id="previous-day" aria-label="Día anterior"><svg class="left-arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button><button class="today-link" id="today-button" hidden>Hoy</button><button class="icon-button" id="next-day" aria-label="Día siguiente"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button></nav></div></div>
+            <div class="heading-actions"><a class="button secondary" href="#registro"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4m-4-9h8m-8-4h5"/></svg>Estación de registro</a><a class="button primary" href="#recetas"><svg viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm3 5h4m-6 4h8m-8 4h6"/></svg>Crear récipes</a></div>
+          </section>
+
+          <section class="metrics" aria-label="Resumen de módulos">
+            <a class="metric olive" href="#pacientes"><div class="metric-top"><span>Pacientes</span><span class="metric-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.3-3.7 2.5-5.5 6.5-5.5s6.2 1.8 6.5 5.5M17 5.5a3.5 3.5 0 0 1 0 6.9m2 2.4c1.6.6 2.4 2.1 2.6 4.7"/></svg></span></div><strong>1.284</strong><small>Registrados</small><span class="metric-change">+18 este mes</span></a>
+            <a class="metric navy" href="#medicos"><div class="metric-top"><span>Médicos</span><span class="metric-icon"><svg viewBox="0 0 24 24"><path d="M6 4v5a6 6 0 0 0 12 0V4M4 4h4m8 0h4M12 15v2a4 4 0 0 0 8 0v-1"/><circle cx="20" cy="14" r="1"/></svg></span></div><strong>32</strong><small>En plantilla</small><span class="metric-change">4 especialidades</span></a>
+            <a class="metric teal" href="#consultas"><div class="metric-top"><span>Consultas</span><span class="metric-icon"><svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm3 5h8m-8 4h8m-8 4h5"/></svg></span></div><strong>496</strong><small>En historia clínica</small><span class="metric-change">Este año</span></a>
+            <a class="metric wine" href="#recetas"><div class="metric-top"><span>Récipes</span><span class="metric-icon"><svg viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm3 5h4m-6 4h8m-8 4h6"/></svg></span></div><strong>873</strong><small>Emitidos</small><span class="metric-change">Actualizados hoy</span></a>
+            <a class="metric gold" href="#medicamentos"><div class="metric-top"><span>Medicamentos</span><span class="metric-icon"><svg viewBox="0 0 24 24"><path d="m8 4 12 12a4.2 4.2 0 0 1-6 6L2 10a4.2 4.2 0 0 1 6-6Zm-2 8 6-6"/></svg></span></div><strong>216</strong><small>En vademécum</small><span class="metric-change">Catálogo vigente</span></a>
+            <a class="metric plum" href="#citas"><div class="metric-top"><span>Citas</span><span class="metric-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18m-13 4h2m4 0h2"/></svg></span></div><strong>18</strong><small>Pendientes desde hoy</small><span class="metric-change">5 para esta mañana</span></a>
+          </section>
+
+          <div class="section-heading"><div><h2>Actividad del día</h2><p>Agenda y récipes recientes en un solo lugar.</p></div><span class="demo-badge">Datos de demostración</span></div>
+          <section class="activity">
+            <article class="panel" id="citas"><div class="panel-heading"><div class="panel-title"><span class="panel-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span><div><h3>Agenda del día</h3><small id="agenda-caption">Consultas programadas</small></div></div><a class="text-link" href="#citas">Ver agenda <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+              <div class="appointment-list">
+                <a class="appointment" href="#citas"><time>08:30</time><span class="person"><strong>Elena Rodríguez</strong><small>Dr. Carlos Méndez · Medicina interna</small></span><span class="badge confirmed">Confirmada</span></a>
+                <a class="appointment" href="#citas"><time>09:15</time><span class="person"><strong>José Antonio Pérez</strong><small>Dra. Ana Morales · Cardiología</small></span><span class="badge pending">Pendiente</span></a>
+                <a class="appointment" href="#citas"><time>10:00</time><span class="person"><strong>María Fernanda López</strong><small>Dr. Carlos Méndez · Medicina interna</small></span><span class="badge confirmed">Confirmada</span></a>
+                <a class="appointment" href="#citas"><time>11:30</time><span class="person"><strong>Andrés Salazar</strong><small>Dr. Luis Herrera · Pediatría</small></span><span class="badge pending">Pendiente</span></a>
+              </div><div class="panel-footer"><a href="#citas">Abrir agenda completa <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a><a class="button small secondary" href="#citas">Agendar cita</a></div>
+            </article>
+            <article class="panel" id="recetas"><div class="panel-heading"><div class="panel-title"><span class="panel-icon wine-icon"><svg viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm3 5h4m-6 4h8m-8 4h6"/></svg></span><div><h3>Récipes recientes</h3><small>Últimas emisiones</small></div></div><a class="text-link" href="#recetas">Ver todos <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+              <div class="prescription-list">
+                <a class="prescription" href="#recetas"><span class="rx-number">N.º 00873</span><span class="person"><strong>Gabriela Fuentes</strong><small>Dr. Carlos Méndez</small></span><time>Hoy · 09:42</time></a>
+                <a class="prescription" href="#recetas"><span class="rx-number">N.º 00872</span><span class="person"><strong>Pedro Castillo</strong><small>Dra. Ana Morales</small></span><time>Hoy · 09:18</time></a>
+                <a class="prescription" href="#recetas"><span class="rx-number">N.º 00871</span><span class="person"><strong>Teresa Medina</strong><small>Dr. Luis Herrera</small></span><time>Ayer · 16:05</time></a>
+                <a class="prescription" href="#recetas"><span class="rx-number">N.º 00870</span><span class="person"><strong>Daniela Rojas</strong><small>Dra. Ana Morales</small></span><time>Ayer · 15:32</time></a>
+              </div><div class="panel-footer"><span class="footer-note">Emisión registrada automáticamente</span><a class="button small secondary" href="#recetas">Crear récipes</a></div>
+            </article>
+          </section>
+          <footer class="institutional-footer">Ministerio del Poder Popular para la Defensa <span>·</span> Venezuela</footer>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

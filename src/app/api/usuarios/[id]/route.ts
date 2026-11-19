@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { respuestaError } from "@/lib/api";
+import { ErrorNegocio, respuestaError } from "@/lib/api";
 import { registrar, sesionDePeticion } from "@/lib/auditoria";
 import { cifrarClave } from "@/lib/clave";
 import { prisma } from "@/lib/prisma";
@@ -27,6 +27,15 @@ export async function PATCH(req: Request, { params }: Contexto) {
       .object({ ...datosUsuario, clave: z.string().optional().nullable() })
       .partial()
       .parse(await req.json());
+    const actual = await prisma.usuario.findUnique({ where: { id }, select: { rol: true, personalId: true } });
+    if (!actual) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+    const rolFinal = d.rol ?? actual.rol;
+    const personalIdFinal = d.personalId === undefined ? actual.personalId : d.personalId || null;
+    if (rolFinal === "MEDICO") {
+      if (!personalIdFinal) throw new ErrorNegocio("Vincule el usuario médico con su ficha de personal y médico.");
+      const personal = await prisma.personal.findUnique({ where: { id: personalIdFinal }, include: { medico: true } });
+      if (!personal?.activo || !personal.medico || personal.tipo !== "MEDICO") throw new ErrorNegocio("El usuario médico debe vincularse a personal activo con ficha de médico.");
+    }
     if (d.clave && d.clave.length < 8) {
       return NextResponse.json({ error: "Datos inválidos", detalles: { clave: ["La contraseña debe tener al menos 8 caracteres"] } }, { status: 400 });
     }

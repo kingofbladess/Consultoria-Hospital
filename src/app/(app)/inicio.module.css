@@ -31,6 +31,23 @@
 .cabecera time span::first-letter { text-transform: uppercase; }
 .cabecera time svg { flex: none; }
 
+.fechaAgenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.navegacionDia {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navegacionDia a:focus-visible { outline-offset: 2px; }
+.flechaAnterior { transform: rotate(180deg); }
+.enlaceHoy { padding: 5px 8px; font-size: 0.8125rem; font-weight: 600; }
+
 .subtitulo {
   margin: 0 0 10px;
   font-size: 1rem;

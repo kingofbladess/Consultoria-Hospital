@@ -29,7 +29,7 @@ Para revisar si todo responde: `GET http://localhost:3000/api/salud`.
 Prisma trae una base PostgreSQL local para desarrollo que no requiere instalar nada:
 
 ```bash
-npx prisma dev -n hospital --detach   # muestra la URL "TCP" postgres://...; póngala en DATABASE_URL con &connection_limit=1
+npx prisma dev -n hospital --detach   # muestra la URL "TCP" postgres://...; póngala en DATABASE_URL con &connection_limit=1&pgbouncer=true
 npx prisma migrate deploy
 npm run db:seed
 ```
